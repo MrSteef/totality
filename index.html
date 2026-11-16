@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eclipse 2027 · Totality duration explorer</title>
+<link href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#14213d;background:#f8fafc}*{box-sizing:border-box}body{margin:0}header{background:#10192c;color:white;padding:17px 24px;display:flex;gap:14px;align-items:center;justify-content:space-between}header h1{font-size:21px;letter-spacing:-.5px;margin:0}header p{color:#b9c5db;margin:5px 0 0;font-size:13px}a{color:inherit}main{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 88px);min-height:560px}#map{width:100%;height:100%}aside{background:white;border-left:1px solid #dbe3ed;overflow:auto;padding:24px}.eyebrow{text-transform:uppercase;letter-spacing:1.1px;font-size:11px;color:#62748d;font-weight:700}h2{font-size:20px;margin:10px 0}.duration{font-size:45px;font-weight:800;letter-spacing:-1.5px;margin:10px 0 0}.muted{font-size:13px;color:#66758a;line-height:1.5}.detail{border-top:1px solid #e1e8f2;display:flex;justify-content:space-between;gap:8px;padding:11px 0;font-size:13px}.detail strong{font-variant-numeric:tabular-nums}.warning{border:1px solid #ffd6aa;background:#fffaf3;border-radius:9px;font-size:12px;padding:12px;line-height:1.5;margin-top:13px}.legend{position:absolute;bottom:28px;left:14px;background:#ffffffee;border-radius:12px;padding:13px 15px;z-index:2;box-shadow:0 2px 15px #0002;width:275px}.legend b{font-size:13px}.gradient{height:14px;border-radius:6px;margin:10px 0 5px;background:linear-gradient(to right, #ffd75f,#ffa642,#f76449,#dd3f69,#ac3083,#5b1f7e,#331865)}.ticks{display:flex;justify-content:space-between;color:#55677e;font-size:11px}.pill{font-size:11px;border:1px solid #aebbd0;border-radius:20px;padding:7px 10px;background:#1d2d49}button{cursor:pointer;background:#182e51;color:white;border:0;border-radius:7px;padding:10px 13px}.tip{font-size:12px;max-width:220px}.maplibregl-popup-content{border-radius:9px;padding:12px 14px}.maplibregl-popup{pointer-events:none}.layers{position:absolute;top:12px;left:12px;z-index:3;background:#ffffffee;box-shadow:0 2px 15px #0002;border-radius:12px;padding:13px 15px;font-size:13px;min-width:228px}.layers label{display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer}.layers input{accent-color:#253d62;width:16px;height:16px}.layers p{font-size:11px;color:#64748b;line-height:1.4;margin:9px 0 0}.cloud-gradient{height:12px;border-radius:5px;background:linear-gradient(90deg,#1b887e,#5ab9a6,#badabd,#efd99e,#ab97a7,#5a5179)}#cloud-legend{margin-top:13px}.legend{max-width:275px}footer{font-size:11px;color:#65728a;margin-top:20px}footer a{color:#345cb7} @media(max-width:800px){header{padding:13px 16px}header h1{font-size:17px}header p{font-size:11px}main{display:flex;flex-direction:column;height:auto}#map{height:62vh;min-height:390px}aside{border-left:0;border-top:1px solid #ddd;padding:18px}.legend{bottom:25px;width:225px;padding:10px}.duration{font-size:38px}}
+</style></head><body>
+<header><div><h1>August 2, 2027 · Total solar eclipse</h1><p>Color shows predicted totality duration for the exact location — click or hover to explore</p></div><span class="pill">NASA eclipse elements</span></header>
+<main><div style="position:relative;min-width:0"><div id="map"></div><div class="layers"><b>Map layers</b><label><input type="checkbox" id="toggle-duration" checked> Totality duration</label><label><input type="checkbox" id="toggle-cloud"> Historical August cloud cover</label><p id="cloud-status">Checking cloud dataset…</p></div><div class="legend" id="legend"><div id="duration-legend"><b>Totality duration</b><div class="gradient"></div><div class="ticks"><span>0 min</span><span>2 min</span><span>4 min</span><span>6m 23s</span></div></div><div id="cloud-legend" hidden><b>Average daytime cloud cover</b><div class="cloud-gradient"></div><div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div><p class="muted" style="margin:6px 0 0">August historical mean, not 2027 forecast.</p></div></div></div>
+<aside><div class="eyebrow">Your selected location</div><h2 id="place">Click within the path</h2><div id="duration" class="duration">—</div><p id="message" class="muted">Move around the map, then click a location to pin its prediction. The center is longer; the edges approach zero seconds.</p><div class="detail" id="cloud-detail" hidden><span>Historical August daytime cloud</span><strong id="cloud-value"></strong></div><div id="details" hidden><div class="detail"><span>Latitude / longitude</span><strong id="coords"></strong></div><div class="detail"><span>Totality begins (C2)</span><strong id="c2"></strong></div><div class="detail"><span>Totality ends (C3)</span><strong id="c3"></strong></div><div class="detail"><span>Sun altitude at maximum</span><strong id="alt"></strong></div></div><div class="warning"><b>Trip-planning caution:</b> Cloud averages are historical regional climatology, not a forecast or probability of clear skies. Eclipse durations are approximate astronomical predictions and may differ by several seconds from independent tools, especially near path edges; they are not guaranteed visible seconds. Terrain, cloud, and the Moon's irregular edge can matter. Avoid planning at the very edge of the corridor. Verify promising locations against an independent eclipse calculator.</div><footer>Calculations from <a href="https://eclipse.gsfc.nasa.gov/SEbeselm/SEbeselm2001/SE2027Aug02Tbeselm.html" target="_blank">Fred Espenak / NASA GSFC Besselian elements</a> (ΔT = 71.7s). Cloud cover: <a href="https://power.larc.nasa.gov/" target="_blank">NASA POWER / CERES</a>, August daytime mean (2005–2024). High-resolution Web Mercator-aligned color raster (~0.056° longitudinal pixels); the click/hover calculation is performed at the actual coordinate, not taken from the raster. OpenFreeMap / OpenStreetMap contributors.</footer></aside></main>
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script type="module">
+import {eclipseAt,formatDuration} from './eclipse.mjs';
+const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:[11,23],zoom:2.4,minZoom:1});
+map.addControl(new maplibregl.NavigationControl(),'top-right');
+let marker=null,hoverPop=null,lastHover=0,cloudData=null,selected=null;
+const overlayBounds=[[-52,45],[68,45],[68,-8],[-52,-8]];
+const $=id=>document.getElementById(id);
+const isOn=id=>$(id).checked;
+function setVisibility(layer,toggle){if(map.getLayer(layer))map.setLayoutProperty(layer,'visibility',isOn(toggle)?'visible':'none')}
+function updateLegends(){
+ $('duration-legend').hidden=!isOn('toggle-duration');
+ $('cloud-legend').hidden=!isOn('toggle-cloud')||!cloudData;
+ $('legend').hidden=$('duration-legend').hidden&&$('cloud-legend').hidden;
+}
+function getCloud(lat,lon){
+ if(!cloudData)return null;
+ const g=cloudData.grid,x=(lon-g.west)/g.spacingDegrees,y=(lat-g.south)/g.spacingDegrees;
+ if(x<0||y<0||x>g.width-1||y>g.height-1)return null;
+ const i=Math.min(g.width-2,Math.floor(x)),j=Math.min(g.height-2,Math.floor(y));
+ const dx=x-i,dy=y-j,a=cloudData.values;
+ return (1-dy)*((1-dx)*a[j][i]+dx*a[j][i+1])+dy*((1-dx)*a[j+1][i]+dx*a[j+1][i+1]);
+}
+function showSelectedCloud(){
+ const v=selected?getCloud(selected.lat,selected.lon):null;
+ $('cloud-detail').hidden=v===null;
+ if(v!==null)$('cloud-value').textContent=`${Math.round(v)}% avg`;
+}
+async function loadCloud(){
+ try{
+   const response=await fetch('./data/cloud-grid.json?v=4',{cache:'no-cache'});
+   if(!response.ok)throw new Error('Cloud files not generated');
+   cloudData=await response.json();
+   if(!Array.isArray(cloudData.values)||cloudData.values.length!==cloudData.grid.height)throw new Error('Invalid cloud grid');
+   map.addSource('cloud',{type:'image',url:'./data/cloud-august.png?v=4',coordinates:overlayBounds});
+   map.addLayer({id:'cloud-cover',type:'raster',source:'cloud',layout:{visibility:isOn('toggle-cloud')?'visible':'none'},paint:{'raster-opacity':0.68,'raster-resampling':'linear'}});
+   $('cloud-status').textContent=`NASA POWER, ${cloudData.period} · August daytime average (not a forecast)`;
+   showSelectedCloud();updateLegends();
+ }catch(e){
+   $('toggle-cloud').checked=false;$('toggle-cloud').disabled=true;
+   $('cloud-status').textContent='Cloud data not built yet: run python build_cloud.py';
+   updateLegends();console.warn('Cloud layer unavailable:',e);
+ }
+}
+$('toggle-duration').addEventListener('change',()=>{setVisibility('totality','toggle-duration');updateLegends()});
+$('toggle-cloud').addEventListener('change',()=>{setVisibility('cloud-cover','toggle-cloud');updateLegends()});
+updateLegends();
+map.on('load',()=>{
+ map.addSource('duration',{type:'image',url:'./data/duration.png?v=4',coordinates:overlayBounds});
+ map.addLayer({id:'totality',type:'raster',source:'duration',paint:{'raster-opacity':0.86,'raster-resampling':'linear'}});
+ loadCloud();
+});
+const el=id=>document.getElementById(id);
+function content(lat,lon,result) {
+ const cloud=getCloud(lat,lon);const cloudHtml=cloud===null?'':`<div>August cloud average: ${Math.round(cloud)}%</div>`;
+ if (!result?.total) return `<div class="tip"><b>No total eclipse</b><div>Outside the visible path of totality</div>${cloudHtml}<small>${lat.toFixed(4)}°, ${lon.toFixed(4)}°</small></div>`;
+ return `<div class="tip"><b>${formatDuration(result.durationSeconds)} of totality</b><div>${lat.toFixed(4)}°, ${lon.toFixed(4)}°</div>${cloudHtml}<small>${result.c2UTC} – ${result.c3UTC}</small></div>`;
+}
+map.on('mousemove',ev=>{
+ if (Date.now()-lastHover<90) return;lastHover=Date.now();
+ const {lat,lng}=ev.lngLat;
+ // Outside the broad overlay bounding area, don't waste work on hover.
+ if(lng< -52||lng>68||lat< -8||lat>45){hoverPop?.remove();return;}
+ const calc=eclipseAt(lat,lng);
+ if(!calc?.total && (!isOn('toggle-cloud') || getCloud(lat,lng)===null)){hoverPop?.remove();return;}
+ if(!hoverPop)hoverPop=new maplibregl.Popup({closeButton:false,closeOnClick:false,offset:12});
+ hoverPop.setLngLat(ev.lngLat).setHTML(content(lat,lng,calc)).addTo(map);
+});
+map.on('mouseout',()=>{hoverPop?.remove();hoverPop=null});
+map.on('click',ev=>{
+ const {lat,lng}=ev.lngLat,r=eclipseAt(lat,lng);selected={lat,lon:lng};showSelectedCloud();hoverPop?.remove();
+ marker?.remove();marker=new maplibregl.Marker({color:'#132e52'}).setLngLat(ev.lngLat).addTo(map);
+ el('place').textContent=`${Math.abs(lat).toFixed(4)}°${lat>=0?'N':'S'}, ${Math.abs(lng).toFixed(4)}°${lng>=0?'E':'W'}`;
+ el('coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+ el('details').hidden=!r?.total;
+ if(r?.total){el('duration').textContent=formatDuration(r.durationSeconds);el('message').textContent='Predicted length of totality at this precise coordinate (rounded to the nearest second).';el('c2').textContent=r.c2UTC;el('c3').textContent=r.c3UTC;el('alt').textContent=`${r.altitude.toFixed(1)}°`;
+ }else{el('duration').textContent='0 seconds';el('message').textContent='No observable totality at this coordinate. Try a point inside the colored corridor.';}
+});
+</script></body></html>
